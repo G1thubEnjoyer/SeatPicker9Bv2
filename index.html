@@ -5,29 +5,531 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Random Seat Picker</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .container { background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); padding: 50px; max-width: 900px; width: 100%; text-align: center; }
-        h1 { font-size: 2.5em; color: #667eea; margin-bottom: 10px; font-weight: 700; }
-        .subtitle { color: #999; font-size: 1em; margin-bottom: 30px; font-weight: 400; }
-        .btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 14px 40px; font-size: 16px; font-weight: 600; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4); margin-bottom: 40px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .btn:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(102, 126, 234, 0.6); }
-        .btn:active { transform: translateY(-1px); }
-        .seats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-        .seat { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border: 2px solid #667eea; border-radius: 12px; padding: 20px; font-size: 15px; font-weight: 600; color: #333; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15); word-break: break-word; }
-        .seat:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-color: #764ba2; }
-        @media (max-width: 600px) { .container { padding: 30px; } h1 { font-size: 2em; } .seats-grid { grid-template-columns: 1fr; } }
-    </style></head>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body { 
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0e27;
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 121, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(88, 166, 255, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .container { 
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px; 
+            box-shadow: 
+                0 0 80px rgba(120, 119, 198, 0.15),
+                inset 0 1px 1px rgba(255, 255, 255, 0.1); 
+            padding: 60px; 
+            max-width: 1000px; 
+            width: 100%; 
+            text-align: center;
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            z-index: 1;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 { 
+            font-size: 3em; 
+            background: linear-gradient(135deg, #58a6ff 0%, #bc8cff 50%, #ff79c6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px; 
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            transition: transform 0.3s ease;
+            animation: titleGlow 3s ease-in-out infinite;
+        }
+        
+        @keyframes titleGlow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(188, 140, 255, 0.4)); }
+            50% { filter: drop-shadow(0 0 30px rgba(88, 166, 255, 0.6)); }
+        }
+        
+        .subtitle { 
+            color: rgba(255, 255, 255, 0.6); 
+            font-size: 1.1em; 
+            margin-bottom: 40px; 
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 50px;
+            flex-wrap: wrap;
+        }
+        
+        .btn { 
+            background: linear-gradient(135deg, #58a6ff 0%, #bc8cff 100%); 
+            color: white; 
+            border: none; 
+            padding: 16px 48px; 
+            font-size: 16px; 
+            font-weight: 700; 
+            border-radius: 16px; 
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+            box-shadow: 
+                0 4px 20px rgba(88, 166, 255, 0.4),
+                0 0 0 0 rgba(88, 166, 255, 0.4);
+            margin: 0; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            font-family: inherit;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 
+                0 8px 30px rgba(88, 166, 255, 0.5),
+                0 0 40px rgba(188, 140, 255, 0.3);
+        }
+        
+        .btn:active { 
+            transform: translateY(0) scale(0.98); 
+        }
+        
+        .btn:focus {
+            outline: 2px solid rgba(88, 166, 255, 0.6);
+            outline-offset: 4px;
+        }
+        
+        .btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 30px rgba(255, 255, 255, 0.1);
+        }
+        
+        .seats-grid { 
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .seat { 
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            border-radius: 12px; 
+            padding: 18px 24px; 
+            font-size: 15px; 
+            font-weight: 500; 
+            color: rgba(255, 255, 255, 0.85); 
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); 
+            word-break: break-word;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: seatFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: relative;
+            overflow: hidden;
+            text-align: left;
+            display: flex;
+            align-items: center;
+        }
+        
+        .seat::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(180deg, #58a6ff 0%, #bc8cff 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .seat:hover::before {
+            opacity: 1;
+        }
+        
+        @keyframes seatFadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .seat:hover { 
+            transform: translateX(4px); 
+            box-shadow: 
+                0 4px 20px rgba(88, 166, 255, 0.2),
+                inset 0 0 0 1px rgba(88, 166, 255, 0.3); 
+            background: rgba(88, 166, 255, 0.08);
+            border-color: rgba(88, 166, 255, 0.3);
+            color: rgba(255, 255, 255, 0.95);
+        }
+        
+        /* Notification Styles */
+        .notification-container {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            pointer-events: none;
+        }
+        
+        .notification {
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px 24px;
+            box-shadow: 
+                0 10px 40px rgba(0, 0, 0, 0.4),
+                0 0 80px rgba(88, 166, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            min-width: 320px;
+            max-width: 420px;
+            pointer-events: all;
+            animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            border-left: 3px solid #58a6ff;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .notification::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #58a6ff 0%, #bc8cff 50%, #ff79c6 100%);
+            width: 100%;
+            transform: scaleX(0);
+            transform-origin: left;
+            animation: progressBar 1.5s linear forwards;
+        }
+        
+        @keyframes progressBar {
+            to {
+                transform: scaleX(1);
+            }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(120%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+        
+        .notification.hiding {
+            animation: slideOut 0.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+        }
+        
+        @keyframes slideOut {
+            to {
+                opacity: 0;
+                transform: translateX(120%) scale(0.8);
+            }
+        }
+        
+        .notification-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .notification.success .notification-icon {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+        
+        .notification.warning .notification-icon {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: white;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+        }
+        
+        .notification-content {
+            flex: 1;
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        
+        .notification-close {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-size: 20px;
+            line-height: 1;
+            font-weight: 300;
+        }
+        
+        .notification-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            transform: rotate(90deg) scale(1.1);
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        @media (max-width: 768px) { 
+            .container { 
+                padding: 40px 30px; 
+                border-radius: 24px;
+            } 
+            h1 { 
+                font-size: 2.2em; 
+            }
+            .subtitle {
+                font-size: 1em;
+            }
+            .seats-grid { 
+                grid-template-columns: 1fr; 
+            }
+            .notification-container {
+                left: 20px;
+                right: 20px;
+                top: 20px;
+            }
+            .notification {
+                min-width: auto;
+                max-width: none;
+            }
+            .button-group {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .btn {
+                width: 100%;
+                padding: 14px 36px;
+                font-size: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            .seat {
+                padding: 20px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
 <body>
+    <div class="notification-container" id="notificationContainer"></div>
+    
     <div class="container">
         <h1>Pengacak Kursi Otomatis 9B</h1>
-        <p class="subtitle">Dibuat oleh Nicho</p>
-        <button class="btn" onclick="generateSeats()">Acak Kursi</button>
-                <button class="btn" onclick="copyToClipboard()">Copy</button>
+        <p class="subtitle">✨ Dibuat oleh Nicho ✨</p>
+        
+        <div class="button-group">
+            <button class="btn" onclick="generateSeats()">🎲 Acak Kursi</button>
+            <button class="btn secondary" onclick="copyToClipboard()">📋 Copy</button>
+        </div>
+        
         <div id="output" class="seats-grid"></div>
-                <textarea id="copyText" style="display: none;"></textarea>
     </div>
-    <script src="script.js"></script>
+    
+    <script>
+        let seatData = [];
+        
+        function showNotification(message, type = 'success') {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            const icon = type === 'success' ? '✓' : '⚠';
+            
+            notification.innerHTML = `
+                <div class="notification-icon">${icon}</div>
+                <div class="notification-content">${message}</div>
+                <button class="notification-close" onclick="dismissNotification(this)">×</button>
+            `;
+            
+            container.appendChild(notification);
+            
+            setTimeout(() => {
+                dismissNotification(notification.querySelector('.notification-close'));
+            }, 1500);
+        }
+        
+        function dismissNotification(btn) {
+            const notification = btn.parentElement;
+            notification.classList.add('hiding');
+            setTimeout(() => {
+                notification.remove();
+            }, 200);
+        }
+        
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        function generateSeats() {
+            const students = [
+                "Abram", "Jovan", "Allura", "Melvin", "Olive", "Dhea", "Naya", "Noel",
+                "Alena", "Nuel", "Evelyn", "Dimas", "Ella", "Tristan", "Oneil", "Hizkia",
+                "Kamila", "Jeje", "Jessica", "Richelle", "Joan", "Kanaya", "Laudya",
+                "Richie", "Jova", "Reynard", "Michael", "Mitha", "Nicho", "Villa",
+                "Samuel", "Gratias", "Russel", "Kierana", "Kenzie", "Jagat"
+            ];
+            const restricted = ["Jeje", "Richie", "Michael", "Villa"];
+            const unrestricted = students.filter(s => !restricted.includes(s));
+            
+            shuffle(unrestricted);
+            
+            const seats1to9 = restricted.concat(unrestricted.slice(0, 14));
+            shuffle(seats1to9);
+            
+            const seats10to18 = unrestricted.slice(14);
+            shuffle(seats10to18);
+            
+            const allStudents = seats1to9.concat(seats10to18);
+            
+            const output = document.getElementById("output");
+            output.innerHTML = "";
+            seatData = [];
+            
+            for (let i = 0; i < 18; i++) {
+                const p1 = allStudents[i * 2];
+                const p2 = allStudents[i * 2 + 1];
+                const text = `${i + 1}. ${p1} - ${p2}`;
+                seatData.push(text);
+                
+                const div = document.createElement("div");
+                div.className = "seat";
+                div.textContent = text;
+                div.style.animationDelay = `${i * 0.04}s`;
+                output.appendChild(div);
+            }
+            
+            showNotification('🎉 Kursi berhasil diacak!', 'success');
+        }
+        
+        function copyToClipboard() {
+            if (seatData.length === 0) {
+                showNotification('⚡ Acak terlebih dahulu!', 'warning');
+                return;
+            }
+            
+            const text = seatData.join("\n");
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            textarea.style.position = "fixed";
+            textarea.style.left = "-9999px";
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand("copy");
+                showNotification('✨ Berhasil tercopy!', 'success');
+            } catch (err) {
+                showNotification('❌ Gagal menyalin!', 'warning');
+            }
+            
+            document.body.removeChild(textarea);
+        }
+    </script>
 </body>
 </html>
-<!-- git test -->
